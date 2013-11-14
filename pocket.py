@@ -1,6 +1,14 @@
 import requests
 import json
+import sys
 from functools import wraps
+
+if sys.version_info[0] < 3:
+    func_attr_code = 'func_code'
+    iteritems = 'iteritems'
+else:
+    func_attr_code = '__code__'
+    iteritems = 'items'
 
 
 class PocketException(Exception):
@@ -43,12 +51,12 @@ def method_wrapper(fn):
 
     @wraps(fn)
     def wrapped(self, *args, **kwargs):
-        arg_names = list(fn.func_code.co_varnames)
+        arg_names = list(getattr(fn, func_attr_code).co_varnames)
         arg_names.remove('self')
         kwargs.update(dict(zip(arg_names, args)))
 
         url = self.api_endpoints[fn.__name__]
-        payload = dict([(k, v) for k, v in kwargs.iteritems() if v is not None])
+        payload = dict([(k, v) for k, v in getattr(kwargs, iteritems)() if v is not None])
         payload.update(self._payload)
 
         return self._make_request(url, payload)
@@ -60,13 +68,13 @@ def bulk_wrapper(fn):
 
     @wraps(fn)
     def wrapped(self, *args, **kwargs):
-        arg_names = list(fn.func_code.co_varnames)
+        arg_names = list(getattr(fn, func_attr_code).co_varnames)
         arg_names.remove('self')
         kwargs.update(dict(zip(arg_names, args)))
 
         wait = kwargs.get('wait', True)
         query = dict(
-            [(k, v) for k, v in kwargs.iteritems() if v is not None]
+            [(k, v) for k, v in getattr(kwargs, iteritems)() if v is not None]
         )
         #TODO: Fix this hack
         query['action'] = 'add' if fn.__name__ == 'bulk_add' else fn.__name__

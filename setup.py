@@ -1,4 +1,10 @@
+import sys
 from setuptools import setup
+
+if sys.version_info[0] < 3:
+    install_requires = ["argparse", "distribute", "requests", "wsgiref"]
+else:
+    install_requires = ["distribute", "requests"],
 
 setup(
     name = "pocket", # easy_install pocket
@@ -18,7 +24,7 @@ setup(
 
     # as a practice no need to hard code version unless you know program wont
     # work unless the specific versions are used
-    install_requires = ["argparse", "distribute", "requests", "wsgiref"],
+    install_requires = install_requires,
 
     py_modules = ["pocket"],
 
